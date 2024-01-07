@@ -1,0 +1,215 @@
+/**
+ * Copyright      2024    Wei Kang (wkang@pku.edu.cn)
+ *
+ * See LICENSE for clarification regarding multiple authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "ssentencepiece/csrc/ssentencepiece.h"
+#include <algorithm>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <limits>
+#include <numeric>
+#include <sstream>
+#include <tuple>
+#include <utility>
+
+namespace ssentencepiece {
+
+void Sstencepiece::Build(const std::string &vocab_path) {
+  LoadVocab(vocab_path);
+
+  std::vector<const char *> keys(tokens_.size());
+  std::vector<size_t> length(tokens_.size());
+  std::vector<int32_t> values(tokens_.size());
+
+  std::iota(values.begin(), values.end(), 0);
+
+  std::stable_sort(values.begin(), values.end(),
+                   [&tokens = tokens_](size_t i1, size_t i2) {
+                     return tokens[i1] < tokens[i2];
+                   });
+
+  for (int32_t i = 0; i < values.size(); ++i) {
+    keys[i] = tokens_[values[i]].c_str();
+    length[i] = tokens_[values[i]].size();
+  }
+
+  da_.build(keys.size(), keys.data(), length.data(), values.data());
+}
+
+void Sstencepiece::GetDag(const std::string &str, DagType *dag) const {
+  dag->resize(str.size());
+  for (int32_t i = 0; i < str.size(); ++i) {
+    int32_t MAX_HIT = str.size() - i;
+    const char *query = str.data() + i;
+    std::vector<int32_t> results(MAX_HIT);
+    std::size_t num_matches =
+        da_.commonPrefixSearch(query, results.data(), MAX_HIT);
+    std::vector<DagItem> items;
+    for (int32_t j = 0; j < num_matches; ++j) {
+      int32_t idx = results[j];
+      std::string tmp = tokens_[idx];
+      items.push_back(std::make_tuple(scores_[idx], i + tmp.size(), idx));
+    }
+    (*dag)[i] = items;
+  }
+}
+
+void Sstencepiece::CalcDp(const std::string &str, const DagType &dag,
+                          std::vector<DagItem> *route) const {
+  route->resize(str.size() + 1);
+  (*route)[str.size()] = std::make_tuple(0.0, 0, 0);
+  for (int32_t i = str.size() - 1; i >= 0; i--) {
+    float max_score = -std::numeric_limits<float>::infinity();
+    int32_t max_idx = -1;
+    int32_t index = 0;
+    for (const auto &item : dag[i]) {
+      float score =
+          std::get<0>(item) + std::get<0>((*route)[std::get<1>(item)]);
+      if (score > max_score) {
+        max_score = score;
+        max_idx = std::get<1>(item);
+        index = std::get<2>(item);
+      } else if (score == max_score) {
+        if (max_idx >= std::get<1>(item)) {
+          max_idx = std::get<1>(item);
+          index = std::get<2>(item);
+        }
+      } else {
+        continue;
+      }
+    }
+    (*route)[i] = std::make_tuple(max_score, max_idx, index);
+  }
+}
+
+void Sstencepiece::Cut(const std::string &str,
+                       const std::vector<DagItem> &route,
+                       std::vector<std::string> *ostrs) const {
+  ostrs->clear();
+  int32_t i = 0;
+  while (i < str.size()) {
+    ostrs->push_back(str.substr(i, std::get<1>(route[i]) - i));
+    i = std::get<1>(route[i]);
+  }
+}
+
+void Sstencepiece::Cut(const std::string &str,
+                       const std::vector<DagItem> &route,
+                       std::vector<int32_t> *oids) const {
+  oids->clear();
+  int32_t i = 0;
+  while (i < str.size()) {
+    oids->push_back(std::get<2>(route[i]));
+    i = std::get<1>(route[i]);
+  }
+}
+
+std::string Sstencepiece::Encode(const std::string &str,
+                                 std::vector<DagItem> *route) const {
+  std::istringstream iss(str);
+  std::ostringstream oss;
+  std::string word;
+  while (iss >> word) {
+    oss << "▁" << word;
+  }
+  std::string norm_str = oss.str();
+  DagType dag;
+  GetDag(norm_str, &dag);
+  CalcDp(norm_str, dag, route);
+  return norm_str;
+}
+
+void Sstencepiece::Encode(const std::string &str,
+                          std::vector<std::string> *ostrs) const {
+  std::vector<DagItem> route;
+  std::string norm_str = Encode(str, &route);
+  Cut(norm_str, route, ostrs);
+}
+
+void Sstencepiece::Encode(const std::string &str,
+                          std::vector<int32_t> *oids) const {
+  std::vector<DagItem> route;
+  std::string norm_str = Encode(str, &route);
+  Cut(norm_str, route, oids);
+}
+
+void Sstencepiece::Encode(std::vector<std::string> &strs,
+                          std::vector<std::vector<std::string>> *ostrs) const {
+  ostrs->resize(strs.size());
+  for (int32_t i = 0; i < strs.size(); ++i) {
+    Encode(strs[i], &((*ostrs)[i]));
+  }
+}
+
+void Sstencepiece::Encode(std::vector<std::string> &strs,
+                          std::vector<std::vector<int32_t>> *oids) const {
+  oids->resize(strs.size());
+  for (int32_t i = 0; i < strs.size(); ++i) {
+    Encode(strs[i], &((*oids)[i]));
+  }
+}
+
+std::string Sstencepiece::Decode(const std::vector<int32_t> &ids) const {
+  std::ostringstream oss;
+  for (auto id : ids) {
+    std::string token = tokens_[id];
+    // Replace ▁ with a space
+    // Unicode 9601, hex 0x2581, utf8 0xe29681
+    const uint8_t *p = reinterpret_cast<const uint8_t *>(token.c_str());
+    if (p[0] == 0xe2 && p[1] == 0x96 && p[2] == 0x81) {
+      token = token.replace(0, 3, " ");
+    }
+    oss << token;
+  }
+  return oss.str();
+}
+
+std::vector<std::string>
+Sstencepiece::Decode(const std::vector<std::vector<int32_t>> &ids) const {
+  std::vector<std::string> res;
+  for (const auto &id : ids) {
+    res.push_back(Decode(id));
+  }
+  return res;
+}
+
+void Sstencepiece::LoadVocab(const std::string &vocab_path) {
+  std::ifstream is(vocab_path);
+  if (!is) {
+    std::cerr << "Open vocab file failed : " << vocab_path.c_str();
+    exit(-1);
+  }
+  tokens_.clear();
+  std::string line;
+  std::string token;
+  float score;
+  while (std::getline(is, line)) {
+    std::istringstream iss(line);
+    if (!(iss >> token >> score)) {
+      std::cerr
+          << "Each line in vocab should contain two items (seperate by space), "
+             "the first one is bpe token, the second one is score, given : "
+          << line.c_str();
+      exit(-1);
+    }
+    tokens_.push_back(token);
+    scores_.push_back(score);
+  }
+}
+
+} // namespace ssentencepiece
