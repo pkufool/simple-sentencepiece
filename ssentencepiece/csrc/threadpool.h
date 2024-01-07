@@ -1,7 +1,7 @@
-/*
-The code is taken from
-https://github.com/progschj/ThreadPool/blob/master/ThreadPool.h
+// The code is taken from
+// https://github.com/progschj/ThreadPool/blob/master/ThreadPool.h
 
+/*
  Copyright (c) 2012 Jakob Progsch, Václav Zeman
 
 This software is provided 'as-is', without any express or implied

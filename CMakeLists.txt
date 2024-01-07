@@ -55,7 +55,7 @@ set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
 set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")
 
-#include(pybind11)
+include(pybind11)
 
 include_directories(${CMAKE_SOURCE_DIR})
 
