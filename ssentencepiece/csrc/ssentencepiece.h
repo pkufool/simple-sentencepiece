@@ -21,6 +21,7 @@
 
 #include "ssentencepiece/csrc/darts.h"
 #include "ssentencepiece/csrc/ssentencepiece.h"
+#include "ssentencepiece/csrc/threadpool.h"
 #include <string>
 #include <tuple>
 #include <utility>
@@ -34,8 +35,13 @@ class Sstencepiece {
   using DagType = std::vector<std::vector<DagItem>>;
 
 public:
-  Sstencepiece(const std::string &vocab_path) { Build(vocab_path); }
-  Sstencepiece() {}
+  Sstencepiece(const std::string &vocab_path, int32_t num_threads = 10) {
+    pool_ = std::make_unique<ThreadPool>(num_threads);
+    Build(vocab_path);
+  }
+  Sstencepiece(int32_t num_threads = 10) {
+    pool_ = std::make_unique<ThreadPool>(num_threads);
+  }
   ~Sstencepiece() {}
 
   void Build(const std::string &vocab_path);
@@ -71,6 +77,7 @@ private:
   void Cut(const std::string &str, const std::vector<DagItem> &route,
            std::vector<int32_t> *oids) const;
 
+  std::unique_ptr<ThreadPool> pool_;
   Darts::DoubleArray da_;
   std::vector<std::string> tokens_;
   std::vector<float> scores_;

@@ -151,16 +151,30 @@ void Sstencepiece::Encode(const std::string &str,
 void Sstencepiece::Encode(std::vector<std::string> &strs,
                           std::vector<std::vector<std::string>> *ostrs) const {
   ostrs->resize(strs.size());
+  std::vector<std::future<void>> results;
   for (int32_t i = 0; i < strs.size(); ++i) {
-    Encode(strs[i], &((*ostrs)[i]));
+    results.emplace_back(pool_->enqueue([this, i, &strs, ostrs] {
+      return this->Encode(strs[i], &((*ostrs)[i]));
+    }));
+  }
+
+  for (auto &&result : results) {
+    result.get();
   }
 }
 
 void Sstencepiece::Encode(std::vector<std::string> &strs,
                           std::vector<std::vector<int32_t>> *oids) const {
   oids->resize(strs.size());
+  std::vector<std::future<void>> results;
   for (int32_t i = 0; i < strs.size(); ++i) {
-    Encode(strs[i], &((*oids)[i]));
+    results.emplace_back(pool_->enqueue([this, i, &strs, oids] {
+      return this->Encode(strs[i], &((*oids)[i]));
+    }));
+  }
+
+  for (auto &&result : results) {
+    result.get();
   }
 }
 
@@ -176,14 +190,19 @@ std::string Sstencepiece::Decode(const std::vector<int32_t> &ids) const {
     }
     oss << token;
   }
-  return oss.str();
+  return oss.str().substr(1); // trim first space
 }
 
 std::vector<std::string>
 Sstencepiece::Decode(const std::vector<std::vector<int32_t>> &ids) const {
   std::vector<std::string> res;
+  std::vector<std::future<std::string>> results;
   for (const auto &id : ids) {
-    res.push_back(Decode(id));
+    results.emplace_back(
+        pool_->enqueue([this, &id] { return this->Decode(id); }));
+  }
+  for (auto &&result : results) {
+    res.push_back(result.get());
   }
   return res;
 }
