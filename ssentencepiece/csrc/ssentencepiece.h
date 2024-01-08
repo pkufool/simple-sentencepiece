@@ -50,10 +50,10 @@ public:
 
   void Encode(const std::string &str, std::vector<int32_t> *oids) const;
 
-  void Encode(std::vector<std::string> &strs,
+  void Encode(const std::vector<std::string> &strs,
               std::vector<std::vector<std::string>> *ostrs) const;
 
-  void Encode(std::vector<std::string> &strs,
+  void Encode(const std::vector<std::string> &strs,
               std::vector<std::vector<int32_t>> *oids) const;
 
   std::string Decode(const std::vector<int32_t> &ids) const;

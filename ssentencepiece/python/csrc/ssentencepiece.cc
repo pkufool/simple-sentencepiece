@@ -20,34 +20,73 @@
 #include "ssentencepiece/csrc/ssentencepiece.h"
 #include <memory>
 #include <string>
-#include <variant>
 #include <vector>
 
 namespace ssentencepiece {
 
 void PybindSsentencepiece(py::module &m) {
-  using PyClass = Ssentencepiece;
-  py::class_<PyClass>(m, "Sstencepiece")
+  using PyClass = Sstencepiece;
+  py::class_<PyClass>(m, "ssentencepiece")
+      .def(py::init([](int32_t num_threads = 10) -> std::unique_ptr<PyClass> {
+             return std::make_unique<PyClass>(num_threads);
+           }),
+           py::arg("num_threads") = 10,
+           py::call_guard<py::gil_scoped_release>())
       .def(py::init([](const std::string &vocab_path,
                        int32_t num_threads = 10) -> std::unique_ptr<PyClass> {
              return std::make_unique<PyClass>(vocab_path, num_threads);
            }),
-           py::arg("vocab_path"), py::arg("num_threads") = 10)
+           py::arg("vocab_path"), py::arg("num_threads") = 10,
+           py::call_guard<py::gil_scoped_release>())
+      .def(
+          "build",
+          [](PyClass &self, const std::string &vocab_path) {
+            self.Build(vocab_path);
+          },
+          py::arg("vocab_path"), py::call_guard<py::gil_scoped_release>())
       .def(
           "encode",
-          [](PyClass &self, const std::string &str, bool output_id)
-              -> std::variant<std::vector<std::string>, std::vector<int32_t>> {
+          [](PyClass &self, const std::string &str,
+             bool output_id = true) -> py::object {
             if (output_id) {
               std::vector<int32_t> oids;
               self.Encode(str, &oids);
-              return oids;
+              return py::cast(oids);
             } else {
               std::vector<std::string> ostrs;
               self.Encode(str, &ostrs);
-              return ostrs;
+              return py::cast(ostrs);
             }
           },
+          py::arg("str"), py::arg("output_id") = true,
           py::call_guard<py::gil_scoped_release>())
+      .def(
+          "encode",
+          [](PyClass &self, const std::vector<std::string> &strs,
+             bool output_id = true) -> py::object {
+            if (output_id) {
+              std::vector<std::vector<int32_t>> oids;
+              self.Encode(strs, &oids);
+              return py::cast(oids);
+            } else {
+              std::vector<std::vector<std::string>> ostrs;
+              self.Encode(strs, &ostrs);
+              return py::cast(ostrs);
+            }
+          },
+          py::arg("strs"), py::arg("output_id") = true,
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "decode",
+          [](PyClass &self, const std::vector<int32_t> &ids) -> std::string {
+            return self.Decode(ids);
+          },
+          py::arg("ids"), py::call_guard<py::gil_scoped_release>())
+      .def(
+          "decode",
+          [](PyClass &self, const std::vector<std::vector<int32_t>> &ids)
+              -> std::vector<std::string> { return self.Decode(ids); },
+          py::arg("ids"), py::call_guard<py::gil_scoped_release>());
 }
 
 PYBIND11_MODULE(_ssentencepiece, m) {

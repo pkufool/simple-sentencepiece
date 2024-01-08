@@ -148,7 +148,7 @@ void Sstencepiece::Encode(const std::string &str,
   Cut(norm_str, route, oids);
 }
 
-void Sstencepiece::Encode(std::vector<std::string> &strs,
+void Sstencepiece::Encode(const std::vector<std::string> &strs,
                           std::vector<std::vector<std::string>> *ostrs) const {
   ostrs->resize(strs.size());
   std::vector<std::future<void>> results;
@@ -163,7 +163,7 @@ void Sstencepiece::Encode(std::vector<std::string> &strs,
   }
 }
 
-void Sstencepiece::Encode(std::vector<std::string> &strs,
+void Sstencepiece::Encode(const std::vector<std::string> &strs,
                           std::vector<std::vector<int32_t>> *oids) const {
   oids->resize(strs.size());
   std::vector<std::future<void>> results;
