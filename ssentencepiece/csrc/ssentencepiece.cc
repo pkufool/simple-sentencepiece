@@ -29,7 +29,7 @@
 
 namespace ssentencepiece {
 
-void Sstencepiece::Build(const std::string &vocab_path) {
+void Ssentencepiece::Build(const std::string &vocab_path) {
   LoadVocab(vocab_path);
 
   std::vector<const char *> keys(tokens_.size());
@@ -51,7 +51,7 @@ void Sstencepiece::Build(const std::string &vocab_path) {
   da_.build(keys.size(), keys.data(), length.data(), values.data());
 }
 
-void Sstencepiece::GetDag(const std::string &str, DagType *dag) const {
+void Ssentencepiece::GetDag(const std::string &str, DagType *dag) const {
   dag->resize(str.size());
   for (int32_t i = 0; i < str.size(); ++i) {
     int32_t MAX_HIT = str.size() - i;
@@ -69,8 +69,8 @@ void Sstencepiece::GetDag(const std::string &str, DagType *dag) const {
   }
 }
 
-void Sstencepiece::CalcDp(const std::string &str, const DagType &dag,
-                          std::vector<DagItem> *route) const {
+void Ssentencepiece::CalcDp(const std::string &str, const DagType &dag,
+                            std::vector<DagItem> *route) const {
   route->resize(str.size() + 1);
   (*route)[str.size()] = std::make_tuple(0.0, 0, 0);
   for (int32_t i = str.size() - 1; i >= 0; i--) {
@@ -97,9 +97,9 @@ void Sstencepiece::CalcDp(const std::string &str, const DagType &dag,
   }
 }
 
-void Sstencepiece::Cut(const std::string &str,
-                       const std::vector<DagItem> &route,
-                       std::vector<std::string> *ostrs) const {
+void Ssentencepiece::Cut(const std::string &str,
+                         const std::vector<DagItem> &route,
+                         std::vector<std::string> *ostrs) const {
   ostrs->clear();
   int32_t i = 0;
   while (i < str.size()) {
@@ -108,9 +108,9 @@ void Sstencepiece::Cut(const std::string &str,
   }
 }
 
-void Sstencepiece::Cut(const std::string &str,
-                       const std::vector<DagItem> &route,
-                       std::vector<int32_t> *oids) const {
+void Ssentencepiece::Cut(const std::string &str,
+                         const std::vector<DagItem> &route,
+                         std::vector<int32_t> *oids) const {
   oids->clear();
   int32_t i = 0;
   while (i < str.size()) {
@@ -119,8 +119,8 @@ void Sstencepiece::Cut(const std::string &str,
   }
 }
 
-std::string Sstencepiece::Encode(const std::string &str,
-                                 std::vector<DagItem> *route) const {
+std::string Ssentencepiece::Encode(const std::string &str,
+                                   std::vector<DagItem> *route) const {
   std::istringstream iss(str);
   std::ostringstream oss;
   std::string word;
@@ -134,22 +134,23 @@ std::string Sstencepiece::Encode(const std::string &str,
   return norm_str;
 }
 
-void Sstencepiece::Encode(const std::string &str,
-                          std::vector<std::string> *ostrs) const {
+void Ssentencepiece::Encode(const std::string &str,
+                            std::vector<std::string> *ostrs) const {
   std::vector<DagItem> route;
   std::string norm_str = Encode(str, &route);
   Cut(norm_str, route, ostrs);
 }
 
-void Sstencepiece::Encode(const std::string &str,
-                          std::vector<int32_t> *oids) const {
+void Ssentencepiece::Encode(const std::string &str,
+                            std::vector<int32_t> *oids) const {
   std::vector<DagItem> route;
   std::string norm_str = Encode(str, &route);
   Cut(norm_str, route, oids);
 }
 
-void Sstencepiece::Encode(const std::vector<std::string> &strs,
-                          std::vector<std::vector<std::string>> *ostrs) const {
+void Ssentencepiece::Encode(
+    const std::vector<std::string> &strs,
+    std::vector<std::vector<std::string>> *ostrs) const {
   ostrs->resize(strs.size());
   std::vector<std::future<void>> results;
   for (int32_t i = 0; i < strs.size(); ++i) {
@@ -163,8 +164,8 @@ void Sstencepiece::Encode(const std::vector<std::string> &strs,
   }
 }
 
-void Sstencepiece::Encode(const std::vector<std::string> &strs,
-                          std::vector<std::vector<int32_t>> *oids) const {
+void Ssentencepiece::Encode(const std::vector<std::string> &strs,
+                            std::vector<std::vector<int32_t>> *oids) const {
   oids->resize(strs.size());
   std::vector<std::future<void>> results;
   for (int32_t i = 0; i < strs.size(); ++i) {
@@ -178,7 +179,7 @@ void Sstencepiece::Encode(const std::vector<std::string> &strs,
   }
 }
 
-std::string Sstencepiece::Decode(const std::vector<int32_t> &ids) const {
+std::string Ssentencepiece::Decode(const std::vector<int32_t> &ids) const {
   std::ostringstream oss;
   for (auto id : ids) {
     std::string token = tokens_[id];
@@ -194,7 +195,7 @@ std::string Sstencepiece::Decode(const std::vector<int32_t> &ids) const {
 }
 
 std::vector<std::string>
-Sstencepiece::Decode(const std::vector<std::vector<int32_t>> &ids) const {
+Ssentencepiece::Decode(const std::vector<std::vector<int32_t>> &ids) const {
   std::vector<std::string> res;
   std::vector<std::future<std::string>> results;
   for (const auto &id : ids) {
@@ -207,7 +208,7 @@ Sstencepiece::Decode(const std::vector<std::vector<int32_t>> &ids) const {
   return res;
 }
 
-void Sstencepiece::LoadVocab(const std::string &vocab_path) {
+void Ssentencepiece::LoadVocab(const std::string &vocab_path) {
   std::ifstream is(vocab_path);
   if (!is) {
     std::cerr << "Open vocab file failed : " << vocab_path.c_str();

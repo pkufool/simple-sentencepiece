@@ -25,7 +25,7 @@
 namespace ssentencepiece {
 
 void PybindSsentencepiece(py::module &m) {
-  using PyClass = Sstencepiece;
+  using PyClass = Ssentencepiece;
   py::class_<PyClass>(m, "ssentencepiece")
       .def(py::init([](int32_t num_threads = 10) -> std::unique_ptr<PyClass> {
              return std::make_unique<PyClass>(num_threads);

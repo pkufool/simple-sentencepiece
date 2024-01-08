@@ -29,20 +29,20 @@
 
 namespace ssentencepiece {
 
-class Sstencepiece {
+class Ssentencepiece {
   // <token score, index into input str, index into tokens>
   using DagItem = std::tuple<float, int32_t, int32_t>;
   using DagType = std::vector<std::vector<DagItem>>;
 
 public:
-  Sstencepiece(const std::string &vocab_path, int32_t num_threads = 10) {
+  Ssentencepiece(const std::string &vocab_path, int32_t num_threads = 10) {
     pool_ = std::make_unique<ThreadPool>(num_threads);
     Build(vocab_path);
   }
-  Sstencepiece(int32_t num_threads = 10) {
+  Ssentencepiece(int32_t num_threads = 10) {
     pool_ = std::make_unique<ThreadPool>(num_threads);
   }
-  ~Sstencepiece() {}
+  ~Ssentencepiece() {}
 
   void Build(const std::string &vocab_path);
 

@@ -27,9 +27,9 @@
 
 namespace ssentencepiece {
 
-TEST(Sstencepiece, TestEncode) {
+TEST(Ssentencepiece, TestEncode) {
   std::string vocab_path = "ssentencepiece/python/tests/testdata/bpe.vocab";
-  Sstencepiece processor(vocab_path);
+  Ssentencepiece processor(vocab_path);
 
   std::string str = "HELLO WORLD  CHINA";
   std::vector<std::string> pieces;
@@ -84,9 +84,9 @@ TEST(Sstencepiece, TestEncode) {
   }
 }
 
-TEST(Sstencepiece, TestDecode) {
+TEST(Ssentencepiece, TestDecode) {
   std::string vocab_path = "ssentencepiece/python/tests/testdata/bpe.vocab";
-  Sstencepiece processor(vocab_path);
+  Ssentencepiece processor(vocab_path);
 
   std::vector<int32_t> ids({22, 58, 24, 425, 34, 81, 40, 20});
   std::string res = processor.Decode(ids);
