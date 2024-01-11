@@ -35,11 +35,12 @@ class Ssentencepiece {
   using DagType = std::vector<std::vector<DagItem>>;
 
 public:
-  Ssentencepiece(const std::string &vocab_path, int32_t num_threads = 10) {
+  Ssentencepiece(const std::string &vocab_path,
+                 int32_t num_threads = std::thread::hardware_concurrency()) {
     pool_ = std::make_unique<ThreadPool>(num_threads);
     Build(vocab_path);
   }
-  Ssentencepiece(int32_t num_threads = 10) {
+  Ssentencepiece(int32_t num_threads = std::thread::hardware_concurrency()) {
     pool_ = std::make_unique<ThreadPool>(num_threads);
   }
   ~Ssentencepiece() {}

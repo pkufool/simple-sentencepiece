@@ -27,17 +27,22 @@ namespace ssentencepiece {
 void PybindSsentencepiece(py::module &m) {
   using PyClass = Ssentencepiece;
   py::class_<PyClass>(m, "ssentencepiece")
-      .def(py::init([](int32_t num_threads = 10) -> std::unique_ptr<PyClass> {
-             return std::make_unique<PyClass>(num_threads);
-           }),
-           py::arg("num_threads") = 10,
-           py::call_guard<py::gil_scoped_release>())
-      .def(py::init([](const std::string &vocab_path,
-                       int32_t num_threads = 10) -> std::unique_ptr<PyClass> {
-             return std::make_unique<PyClass>(vocab_path, num_threads);
-           }),
-           py::arg("vocab_path"), py::arg("num_threads") = 10,
-           py::call_guard<py::gil_scoped_release>())
+      .def(
+          py::init([](int32_t num_threads = std::thread::hardware_concurrency())
+                       -> std::unique_ptr<PyClass> {
+            return std::make_unique<PyClass>(num_threads);
+          }),
+          py::arg("num_threads") = std::thread::hardware_concurrency(),
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          py::init([](const std::string &vocab_path,
+                      int32_t num_threads = std::thread::hardware_concurrency())
+                       -> std::unique_ptr<PyClass> {
+            return std::make_unique<PyClass>(vocab_path, num_threads);
+          }),
+          py::arg("vocab_path"),
+          py::arg("num_threads") = std::thread::hardware_concurrency(),
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "build",
           [](PyClass &self, const std::string &vocab_path) {
