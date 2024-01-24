@@ -1,0 +1,31 @@
+[build-system]
+requires = [
+    "setuptools>=61",
+    "wheel",
+    "ninja",
+    "cmake>=3.12",
+]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "simple-sentencepiece"
+version = "0.1"
+authors = [
+  { name="Next-gen Kaldi development team", email="wkang@pku.edu.cn" },
+]
+description="A simple sentencepiece encoder and decoder without any dependency."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/pkufool/simple-sentencepiece"
+"Bug Tracker" = "https://github.com/pkufool/simple-sentencepiece/issues"
+
+[tool.black]
+line-length = 80
