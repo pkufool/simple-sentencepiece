@@ -3,7 +3,10 @@ set(ssentencepiece_srcs
 )
 
 add_library(ssentencepiece_core ${ssentencepiece_srcs})
+
+if (not WIN32)
 target_link_libraries(ssentencepiece_core pthread)
+endif()
 
 install(TARGETS ssentencepiece_core DESTINATION ${CMAKE_INSTALL_PREFIX})
 
