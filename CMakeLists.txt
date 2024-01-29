@@ -33,6 +33,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 option(SBPE_ENABLE_TESTS "Whether to build tests" ON)
+option(CMAKE_USE_WIN32_THREADS_INIT "using WIN32 threads" ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
