@@ -18,6 +18,7 @@
 
 #include "ssentencepiece/csrc/ssentencepiece.h"
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -93,7 +94,9 @@ void Ssentencepiece::CalcDp(const std::string &str, const DagType &dag,
         continue;
       }
     }
-    (*route)[i] = std::make_tuple(max_score, max_idx, index);
+    (*route)[i] = std::make_tuple(
+        max_score == -std::numeric_limits<float>::infinity() ? 0 : max_score,
+        max_idx, index);
   }
 }
 
@@ -103,8 +106,18 @@ void Ssentencepiece::Cut(const std::string &str,
   ostrs->clear();
   int32_t i = 0;
   while (i < str.size()) {
-    ostrs->push_back(str.substr(i, std::get<1>(route[i]) - i));
-    i = std::get<1>(route[i]);
+    int32_t next_index = std::get<1>(route[i]);
+    if (next_index == -1) {
+      std::string tmp = "<unk>";
+      if (fallback_bytes_) {
+        tmp = tokens_[(unsigned char)(str[i]) + bytes_offset_];
+      }
+      ostrs->push_back(tmp);
+      i += 1;
+    } else {
+      ostrs->push_back(str.substr(i, std::get<1>(route[i]) - i));
+      i = next_index;
+    }
   }
 }
 
@@ -114,8 +127,18 @@ void Ssentencepiece::Cut(const std::string &str,
   oids->clear();
   int32_t i = 0;
   while (i < str.size()) {
-    oids->push_back(std::get<2>(route[i]));
-    i = std::get<1>(route[i]);
+    int32_t next_index = std::get<1>(route[i]);
+    if (next_index == -1) {
+      int32_t tmp = unk_id_;
+      if (fallback_bytes_) {
+        tmp = (unsigned char)(str[i]) + bytes_offset_;
+      }
+      oids->push_back(tmp);
+      i += 1;
+    } else {
+      oids->push_back(std::get<2>(route[i]));
+      i = next_index;
+    }
   }
 }
 
@@ -189,7 +212,12 @@ std::string Ssentencepiece::Decode(const std::vector<int32_t> &ids) const {
     if (p[0] == 0xe2 && p[1] == 0x96 && p[2] == 0x81) {
       token = token.replace(0, 3, " ");
     }
-    oss << token;
+    if (token.substr(0, 3) == "<0x") {
+      assert(fallback_bytes_);
+      oss << (char)(id - bytes_offset_);
+    } else {
+      oss << token;
+    }
   }
   return oss.str().substr(1); // trim first space
 }
@@ -226,6 +254,13 @@ void Ssentencepiece::LoadVocab(const std::string &vocab_path) {
              "the first one is bpe token, the second one is score, given : "
           << line.c_str();
       exit(-1);
+    }
+    if (token == "<0x00>") {
+      fallback_bytes_ = true;
+      bytes_offset_ = tokens_.size();
+    }
+    if (token == "<unk>") {
+      unk_id_ = tokens_.size();
     }
     tokens_.push_back(token);
     scores_.push_back(score);

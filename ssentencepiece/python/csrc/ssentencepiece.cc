@@ -83,15 +83,33 @@ void PybindSsentencepiece(py::module &m) {
           py::call_guard<py::gil_scoped_release>())
       .def(
           "decode",
-          [](PyClass &self, const std::vector<int32_t> &ids) -> std::string {
-            return self.Decode(ids);
+          [](PyClass &self, const std::vector<int32_t> &ids) -> py::str {
+            std::string res;
+            {
+              py::gil_scoped_release release;
+              res = self.Decode(ids);
+            }
+            return py::str(
+                PyUnicode_DecodeUTF8(res.c_str(), res.size(), "ignore"));
           },
-          py::arg("ids"), py::call_guard<py::gil_scoped_release>())
+          py::arg("ids"))
       .def(
           "decode",
-          [](PyClass &self, const std::vector<std::vector<int32_t>> &ids)
-              -> std::vector<std::string> { return self.Decode(ids); },
-          py::arg("ids"), py::call_guard<py::gil_scoped_release>());
+          [](PyClass &self,
+             const std::vector<std::vector<int32_t>> &ids) -> py::list {
+            std::vector<std::string> res;
+            {
+              py::gil_scoped_release release;
+              res = self.Decode(ids);
+            }
+            py::list result;
+            for (const auto &r : res) {
+              result.append(
+                  py::str(PyUnicode_DecodeUTF8(r.c_str(), r.size(), "ignore")));
+            }
+            return result;
+          },
+          py::arg("ids"));
 }
 
 PYBIND11_MODULE(_ssentencepiece, m) {

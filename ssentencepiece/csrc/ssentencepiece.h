@@ -78,10 +78,13 @@ private:
   void Cut(const std::string &str, const std::vector<DagItem> &route,
            std::vector<int32_t> *oids) const;
 
-  std::unique_ptr<ThreadPool> pool_;
-  Darts::DoubleArray da_;
+  bool fallback_bytes_ = false;
+  int32_t bytes_offset_ = 0;
+  int32_t unk_id_ = 0;
   std::vector<std::string> tokens_;
   std::vector<float> scores_;
+  std::unique_ptr<ThreadPool> pool_;
+  Darts::DoubleArray da_;
 };
 
 } // namespace ssentencepiece
