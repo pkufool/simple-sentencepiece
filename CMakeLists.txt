@@ -21,7 +21,10 @@ endif()
 set(CMAKE_INSTALL_RPATH ${SBPE_RPATH_ORIGIN})
 set(CMAKE_BUILD_RPATH ${SBPE_RPATH_ORIGIN})
 
-set(BUILD_SHARED_LIBS ON)
+option(SBPE_ENABLE_TESTS "Whether to build tests" ON)
+option(SBPE_BUILD_PYTHON "Whether to build Python" ON)
+option(BUILD_SHARED_LIBS "Whether to build shared libraries" ON)
+
 if(WIN32)
   message(STATUS "Set BUILD_SHARED_LIBS to OFF for Windows")
   set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -32,7 +35,6 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-option(SBPE_ENABLE_TESTS "Whether to build tests" ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
@@ -55,7 +57,9 @@ set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
 set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")
 
-include(pybind11)
+if(SBPE_BUILD_PYTHON)
+  include(pybind11)
+endif()
 
 include_directories(${CMAKE_SOURCE_DIR})
 
