@@ -31,7 +31,16 @@
 namespace ssentencepiece {
 
 void Ssentencepiece::Build(const std::string &vocab_path) {
-  LoadVocab(vocab_path);
+  std::ifstream is(vocab_path);
+  if (!is) {
+    std::cerr << "Open vocab file failed : " << vocab_path.c_str();
+    exit(-1);
+  }
+  Build(is);
+}
+
+void Ssentencepiece::Build(std::istream &is) {
+  LoadVocab(is);
 
   std::vector<const char *> keys(tokens_.size());
   std::vector<size_t> length(tokens_.size());
@@ -236,12 +245,7 @@ Ssentencepiece::Decode(const std::vector<std::vector<int32_t>> &ids) const {
   return res;
 }
 
-void Ssentencepiece::LoadVocab(const std::string &vocab_path) {
-  std::ifstream is(vocab_path);
-  if (!is) {
-    std::cerr << "Open vocab file failed : " << vocab_path.c_str();
-    exit(-1);
-  }
+void Ssentencepiece::LoadVocab(std::istream &is) {
   tokens_.clear();
   std::string line;
   std::string token;
