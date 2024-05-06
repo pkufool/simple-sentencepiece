@@ -21,7 +21,7 @@ endif()
 set(CMAKE_INSTALL_RPATH ${SBPE_RPATH_ORIGIN})
 set(CMAKE_BUILD_RPATH ${SBPE_RPATH_ORIGIN})
 
-option(SBPE_ENABLE_TESTS "Whether to build tests" ON)
+option(SBPE_ENABLE_TESTS "Whether to build tests" OFF)
 option(SBPE_BUILD_PYTHON "Whether to build Python" ON)
 option(BUILD_SHARED_LIBS "Whether to build shared libraries" ON)
 

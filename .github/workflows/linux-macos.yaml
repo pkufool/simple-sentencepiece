@@ -51,7 +51,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -D CMAKE_BUILD_TYPE=Release ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DSBPE_ENABLE_TESTS=ON ..
 
       - name: Build simple sentencepiece for ubuntu
         shell: bash
