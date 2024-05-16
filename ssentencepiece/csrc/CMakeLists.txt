@@ -4,7 +4,7 @@ set(ssentencepiece_srcs
 
 add_library(ssentencepiece_core ${ssentencepiece_srcs})
 
-if (NOT WIN32)
+if (NOT WIN32 AND (NOT DEFINED ANDROID_ABI))
 target_link_libraries(ssentencepiece_core pthread)
 endif()
 
