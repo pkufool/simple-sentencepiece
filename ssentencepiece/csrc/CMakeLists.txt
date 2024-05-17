@@ -4,6 +4,10 @@ set(ssentencepiece_srcs
 
 add_library(ssentencepiece_core ${ssentencepiece_srcs})
 
+if (NOT BUILD_SHARED_LIBS)
+  set_property(TARGET ssentencepiece_core PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif()
+
 if (NOT WIN32 AND (NOT DEFINED ANDROID_ABI))
 target_link_libraries(ssentencepiece_core pthread)
 endif()

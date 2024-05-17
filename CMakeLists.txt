@@ -25,11 +25,6 @@ option(SBPE_ENABLE_TESTS "Whether to build tests" OFF)
 option(SBPE_BUILD_PYTHON "Whether to build Python" ON)
 option(BUILD_SHARED_LIBS "Whether to build shared libraries" ON)
 
-if(WIN32)
-  message(STATUS "Set BUILD_SHARED_LIBS to OFF for Windows")
-  set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-endif()
-
 if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "No CMAKE_BUILD_TYPE given, default to Release")
   set(CMAKE_BUILD_TYPE Release)
