@@ -271,4 +271,37 @@ void Ssentencepiece::LoadVocab(std::istream &is) {
   }
 }
 
+int32_t Ssentencepiece::PieceToId(const std::string &piece) const {
+  auto it = std::find(tokens_.begin(), tokens_.end(), piece);
+  if (it == tokens_.end()) {
+    return unk_id_;
+  }
+  return std::distance(tokens_.begin(), it);
+}
+
+std::vector<int32_t>
+Ssentencepiece::PieceToId(const std::vector<std::string> &pieces) const {
+  std::vector<int32_t> res;
+  for (const auto &piece : pieces) {
+    res.push_back(PieceToId(piece));
+  }
+  return res;
+}
+
+std::string Ssentencepiece::IdToPiece(int32_t id) const {
+  if (id == unk_id_) {
+    return "<unk>";
+  }
+  return tokens_[id];
+}
+
+std::vector<std::string>
+Ssentencepiece::IdToPiece(const std::vector<int32_t> &ids) const {
+  std::vector<std::string> res;
+  for (const auto &id : ids) {
+    res.push_back(IdToPiece(id));
+  }
+  return res;
+}
+
 } // namespace ssentencepiece

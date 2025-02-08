@@ -109,6 +109,41 @@ void PybindSsentencepiece(py::module &m) {
             }
             return result;
           },
+          py::arg("ids"))
+      .def("vocab_size", &PyClass::VocabSize)
+      .def(
+          "piece_to_id",
+          [](PyClass &self, const std::string &piece) -> int {
+            return self.PieceToId(piece);
+          },
+          py::arg("piece"))
+      .def(
+          "piece_to_id",
+          [](PyClass &self,
+             const std::vector<std::string> &pieces) -> py::object {
+            auto res = self.PieceToId(pieces);
+            return py::cast(res);
+          },
+          py::arg("pieces"))
+      .def(
+          "id_to_piece",
+          [](PyClass &self, int id) -> py::str {
+            std::string res = self.IdToPiece(id);
+            return py::str(
+                PyUnicode_DecodeUTF8(res.c_str(), res.size(), "ignore"));
+          },
+          py::arg("id"))
+      .def(
+          "id_to_piece",
+          [](PyClass &self, const std::vector<int> &ids) -> py::list {
+            std::vector<std::string> res = self.IdToPiece(ids);
+            py::list result;
+            for (const auto &r : res) {
+              result.append(
+                  py::str(PyUnicode_DecodeUTF8(r.c_str(), r.size(), "ignore")));
+            }
+            return result;
+          },
           py::arg("ids"));
 }
 

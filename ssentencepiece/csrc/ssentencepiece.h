@@ -72,6 +72,14 @@ public:
   std::vector<std::string>
   Decode(const std::vector<std::vector<int32_t>> &ids) const;
 
+  int32_t VocabSize() const { return tokens_.size(); }
+
+  int32_t PieceToId(const std::string &piece) const;
+  std::vector<int32_t> PieceToId(const std::vector<std::string> &pieces) const;
+
+  std::string IdToPiece(int32_t id) const;
+  std::vector<std::string> IdToPiece(const std::vector<int32_t> &ids) const;
+
 private:
   void LoadVocab(std::istream &is);
 
