@@ -136,4 +136,37 @@ TEST(Ssentencepiece, TestDecodeBbpe) {
   EXPECT_EQ(res, "中华巍巍");
 }
 
+TEST(Ssentencepiece, TestEncodeBbpe2) {
+  std::string vocab_path = "ssentencepiece/python/tests/testdata/bbpe2.vocab";
+  Ssentencepiece processor(vocab_path);
+
+  std::string str = "ƋţŅ ƌŋţ ƌĭĺ ƋŠŒ";
+  std::vector<std::string> pieces;
+  processor.Encode(str, &pieces);
+
+  std::ostringstream oss;
+  for (auto piece : pieces) {
+    oss << piece << " ";
+  }
+  EXPECT_EQ(oss.str(), "▁Ƌţ Ņ ▁ƌŋţ ▁ƌĭĺ ▁ƋŠŒ ");
+
+  std::vector<int32_t> ids;
+  processor.Encode(str, &ids);
+  oss.str("");
+  oss.clear();
+  for (auto id : ids) {
+    oss << id << " ";
+  }
+  EXPECT_EQ(oss.str(), "105 70 252 245 221 ");
+}
+
+TEST(Ssentencepiece, TestDecodeBbpe2) {
+  std::string vocab_path = "ssentencepiece/python/tests/testdata/bbpe2.vocab";
+  Ssentencepiece processor(vocab_path);
+
+  std::vector<int32_t> ids({105, 70, 252, 245, 221 });
+  std::string res = processor.Decode(ids);
+  EXPECT_EQ(res, "ƋţŅ ƌŋţ ƌĭĺ ƋŠŒ");
+}
+
 } // namespace ssentencepiece
