@@ -3,14 +3,14 @@ requires = [
     "setuptools>=61",
     "wheel",
     "ninja",
-    "cmake>=3.12",
+    "cmake>=3.8",
 ]
 build-backend = "setuptools.build_meta"
 
 
 [project]
 name = "simple-sentencepiece"
-version = "0.2"
+version = "0.3"
 authors = [
   { name="Next-gen Kaldi development team", email="wkang@pku.edu.cn" },
 ]
@@ -20,7 +20,7 @@ dependencies = [
 ]
 description="A simple sentencepiece encoder and decoder without any dependency."
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
