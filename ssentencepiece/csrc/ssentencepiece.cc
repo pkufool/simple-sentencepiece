@@ -95,10 +95,8 @@ void Ssentencepiece::CalcDp(const std::string &str, const DagType &dag,
         max_idx = std::get<1>(item);
         index = std::get<2>(item);
       } else if (score == max_score) {
-        if (max_idx >= std::get<1>(item)) {
-          max_idx = std::get<1>(item);
-          index = std::get<2>(item);
-        }
+        max_idx = std::get<1>(item);
+        index = std::get<2>(item);
       } else {
         continue;
       }
@@ -114,18 +112,36 @@ void Ssentencepiece::Cut(const std::string &str,
                          std::vector<std::string> *ostrs) const {
   ostrs->clear();
   int32_t i = 0;
+  int32_t unk_start = -1;
   while (i < str.size()) {
     int32_t next_index = std::get<1>(route[i]);
     if (next_index == -1) {
-      std::string tmp = "<unk>";
       if (fallback_bytes_) {
-        tmp = tokens_[(unsigned char)(str[i]) + bytes_offset_];
+        std::string tmp = tokens_[(unsigned char)(str[i]) + bytes_offset_];
+        ostrs->push_back(tmp);
+      } else {
+        if (unk_start == -1) {
+          unk_start = i;
+        }
       }
-      ostrs->push_back(tmp);
       i += 1;
     } else {
+      // keep the original string if it is not in the token table
+      // compatible with sentencepiece
+      if (unk_start != -1) {
+        if (unk_start != i) {
+          ostrs->push_back(str.substr(unk_start, i - unk_start));
+        }
+        unk_start = -1;
+      }
       ostrs->push_back(str.substr(i, std::get<1>(route[i]) - i));
       i = next_index;
+    }
+  }
+  // if the last token is unknown, we need to add it to the result
+  if (unk_start != -1) {
+    if (unk_start != i) {
+      ostrs->push_back(str.substr(unk_start, i - unk_start));
     }
   }
 }
@@ -138,11 +154,14 @@ void Ssentencepiece::Cut(const std::string &str,
   while (i < str.size()) {
     int32_t next_index = std::get<1>(route[i]);
     if (next_index == -1) {
-      int32_t tmp = unk_id_;
       if (fallback_bytes_) {
-        tmp = (unsigned char)(str[i]) + bytes_offset_;
+        int32_t tmp = (unsigned char)(str[i]) + bytes_offset_;
+        oids->push_back(tmp);
+      } else {
+        if (oids->back() != unk_id_) {
+          oids->push_back(unk_id_);
+        }
       }
-      oids->push_back(tmp);
       i += 1;
     } else {
       oids->push_back(std::get<2>(route[i]));

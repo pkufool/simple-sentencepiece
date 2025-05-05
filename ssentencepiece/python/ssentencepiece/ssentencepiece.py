@@ -16,6 +16,7 @@
 
 import _ssentencepiece
 import os
+import unicodedata
 from typing import List, Union
 
 
@@ -60,9 +61,16 @@ class Ssentencepiece:
             assert (
                 out_type is str
             ), f"The out_type could only be int or str, given {out_type}"
+            # google's sentencepiece uses NFKC normalization.
+            if isinstance(text, str):
+                text = unicodedata.normalize("NFKC", text)
+            else:
+                text = [unicodedata.normalize("NFKC", x) for x in text]
             return self.processor.encode(text, output_id=False)
 
-    def decode(self, ids: Union[List[int], List[List[int]]]) -> Union[str, List[str]]:
+    def decode(
+        self, ids: Union[List[int], List[List[int]]]
+    ) -> Union[str, List[str]]:
         """
         Decode the token ids into string, almost the same as the decode interface in sentencepiece.
 
@@ -75,3 +83,45 @@ class Ssentencepiece:
           If the ids is a list of a list of ints, outputs a list of strings.
         """
         return self.processor.decode(ids)
+
+    def vocab_size(self) -> int:
+        """
+        Return the vocabulary size.`
+        """
+        return self.processor.vocab_size()
+
+    def id_to_piece(self, ids: Union[int, List[int]]) -> Union[str, List[str]]:
+        """
+        Convert the token id into piece.
+
+        Args:
+          ids:
+            The input ids, could be a int of list of ints.
+
+        Return:
+          If the ids is a a int, outputs a single string.
+          If the ids is a list of ints, outputs a list of strings.
+        """
+        return self.processor.id_to_piece(ids)
+
+    def piece_to_id(
+        self, pieces: Union[str, List[str]]
+    ) -> Union[int, List[int]]:
+        """
+        Convert the piece into token id.
+
+        Args:
+          pieces:
+            The input pieces, could be a list of strings of a list of a list of ints.
+
+        Return:
+          If the ids is a string, outputs a single int.
+          If the ids is a list of string, outputs a list of ints.
+        """
+
+        # google's sentencepiece uses NFKC normalization.
+        if isinstance(pieces, str):
+            pieces = unicodedata.normalize("NFKC", pieces)
+        else:
+            pieces = [unicodedata.normalize("NFKC", x) for x in pieces]
+        return self.processor.piece_to_id(pieces)

@@ -93,6 +93,13 @@ class TestEncodeDecode(unittest.TestCase):
         r2 = ssp.decode(ssp.encode(sentences))
         assert r1 == r2, (r1, r2)
 
+    def test_id_to_piece_to_id(self):
+        ssp = Ssentencepiece("ssentencepiece/python/tests/testdata/bpe.vocab")
+        for i in range(ssp.vocab_size()):
+            piece = ssp.id_to_piece(i)
+            id = ssp.piece_to_id(piece)
+            assert i == id, (i, piece, id)
+
 
 if __name__ == "__main__":
     unittest.main()

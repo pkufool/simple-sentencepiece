@@ -164,9 +164,36 @@ TEST(Ssentencepiece, TestDecodeBbpe2) {
   std::string vocab_path = "ssentencepiece/python/tests/testdata/bbpe2.vocab";
   Ssentencepiece processor(vocab_path);
 
-  std::vector<int32_t> ids({105, 70, 252, 245, 221 });
+  std::vector<int32_t> ids({105, 70, 252, 245, 221});
   std::string res = processor.Decode(ids);
   EXPECT_EQ(res, "ƋţŅ ƌŋţ ƌĭĺ ƋŠŒ");
+}
+
+TEST(Ssentencepiece, TestIdPiece) {
+  std::string vocab_path = "ssentencepiece/python/tests/testdata/bpe.vocab";
+  Ssentencepiece processor(vocab_path);
+
+  EXPECT_EQ(processor.VocabSize(), 500);
+
+  EXPECT_EQ(processor.PieceToId("▁HE"), 22);
+  EXPECT_EQ(processor.PieceToId("LL"), 58);
+  EXPECT_EQ(processor.PieceToId("O"), 24);
+  EXPECT_EQ(processor.PieceToId("▁WORLD"), 425);
+  EXPECT_EQ(processor.PieceToId("▁"), 34);
+
+  EXPECT_EQ(processor.IdToPiece(22), "▁HE");
+  EXPECT_EQ(processor.IdToPiece(58), "LL");
+  EXPECT_EQ(processor.IdToPiece(24), "O");
+  EXPECT_EQ(processor.IdToPiece(425), "▁WORLD");
+  EXPECT_EQ(processor.IdToPiece(34), "▁");
+
+  EXPECT_EQ(processor.PieceToId(std::vector<std::string>(
+                {"▁HE", "LL", "O", "▁WORLD", "▁", "CH", "IN", "A"})),
+            std::vector<int32_t>({22, 58, 24, 425, 34, 81, 40, 20}));
+  EXPECT_EQ(processor.IdToPiece(
+                std::vector<int32_t>({22, 58, 24, 425, 34, 81, 40, 20})),
+            std::vector<std::string>(
+                {"▁HE", "LL", "O", "▁WORLD", "▁", "CH", "IN", "A"}));
 }
 
 } // namespace ssentencepiece
