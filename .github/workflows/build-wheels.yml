@@ -23,6 +23,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Build sdist
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade build
+          python3 -m build -s
+          ls -l dist/*
+
+      - name: Publish sdist to PyPI
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          twine upload dist/simple_sentencepiece-*.tar.gz
+
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels
@@ -51,19 +67,3 @@ jobs:
           python3 -m pip install wheel twine==6.0.1 setuptools
 
           twine upload ./wheelhouse/*.whl
-
-      - name: Build sdist
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        shell: bash
-        run: |
-          python3 -m pip install --upgrade build
-          python3 -m build -s
-          ls -l dist/*
-
-      - name: Publish sdist to PyPI
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          twine upload dist/simple_sentencepiece-*.tar.gz
