@@ -19,9 +19,13 @@ import os
 import unicodedata
 from typing import List, Union
 
+import importlib_resources
+
 
 class Ssentencepiece:
-    def __init__(self, vocab: str, num_threads: int = os.cpu_count()):
+    def __init__(
+        self, vocab: str = "librispeech-500", num_threads: int = os.cpu_count()
+    ):
         """
         Construct a Ssentencepiece object.
 
@@ -33,7 +37,15 @@ class Ssentencepiece:
             The number of worker threads when encode/decode multiple sequences.
             Default `os.cpu_count()`.
         """
-        assert os.path.exists(vocab), f"The vocab doesn't exists : {vocab}"
+        if not os.path.exists(vocab):
+            ref = (
+                importlib_resources.files("ssentencepiece")
+                / f"resources/{vocab}.vocab"
+            )
+            with importlib_resources.as_file(ref) as path:
+                vocab = str(path)
+            assert os.path.exists(vocab), f"Cannot find {vocab} file."
+
         self.processor = _ssentencepiece.ssentencepiece(vocab, num_threads)
 
     def encode(

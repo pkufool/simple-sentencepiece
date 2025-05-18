@@ -15,8 +15,9 @@ authors = [
   { name="Next-gen Kaldi development team", email="wkang@pku.edu.cn" },
 ]
 dependencies = [
-  "sentencepiece",
   "click",
+  "importlib-resources",
+  "sentencepiece",
 ]
 description="A simple sentencepiece encoder and decoder without any dependency."
 readme = "README.md"
