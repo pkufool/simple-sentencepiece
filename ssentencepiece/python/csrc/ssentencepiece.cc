@@ -55,32 +55,42 @@ void PybindSsentencepiece(py::module &m) {
              bool output_id = true) -> py::object {
             if (output_id) {
               std::vector<int32_t> oids;
-              self.Encode(str, &oids);
-              return py::cast(oids);
+              {
+                py::gil_scoped_release release;
+                self.Encode(str, &oids);
+              }
+              return py::cast(oids, py::return_value_policy::copy);
             } else {
               std::vector<std::string> ostrs;
-              self.Encode(str, &ostrs);
-              return py::cast(ostrs);
+              {
+                py::gil_scoped_release release;
+                self.Encode(str, &ostrs);
+              }
+              return py::cast(ostrs, py::return_value_policy::copy);
             }
           },
-          py::arg("str"), py::arg("output_id") = true,
-          py::call_guard<py::gil_scoped_release>())
+          py::arg("str"), py::arg("output_id") = true)
       .def(
           "encode",
           [](PyClass &self, const std::vector<std::string> &strs,
              bool output_id = true) -> py::object {
             if (output_id) {
               std::vector<std::vector<int32_t>> oids;
-              self.Encode(strs, &oids);
-              return py::cast(oids);
+              {
+                py::gil_scoped_release release;
+                self.Encode(strs, &oids);
+              }
+              return py::cast(oids, py::return_value_policy::copy);
             } else {
               std::vector<std::vector<std::string>> ostrs;
-              self.Encode(strs, &ostrs);
-              return py::cast(ostrs);
+              {
+                py::gil_scoped_release release;
+                self.Encode(strs, &ostrs);
+              }
+              return py::cast(ostrs, py::return_value_policy::copy);
             }
           },
-          py::arg("strs"), py::arg("output_id") = true,
-          py::call_guard<py::gil_scoped_release>())
+          py::arg("strs"), py::arg("output_id") = true)
       .def(
           "decode",
           [](PyClass &self, const std::vector<int32_t> &ids) -> py::str {
