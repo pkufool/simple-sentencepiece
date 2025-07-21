@@ -18,13 +18,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-22.04, windows-2022, macos-13]
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Build sdist
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
         shell: bash
         run: |
           python3 -m pip install --upgrade build
@@ -32,7 +32,7 @@ jobs:
           ls -l dist/*
 
       - name: Publish sdist to PyPI
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
@@ -47,15 +47,13 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:
-          CIBW_SKIP: "cp27-* cp35-* cp36-* cp37-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
 
       - name: Display wheels
         shell: bash
         run: |
           ls -lh ./wheelhouse/
-
-          ls -lh ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v4
         with:

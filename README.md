@@ -41,20 +41,20 @@ res = ssp.decode(ids)
 
 | Model Name | Description | Link |
 |------------|-------------|------|
-| alphabet-30| `<blk>`,`<unk>`, `'`, `▁` and 26 alphabets (upper case) | [alphabet-30](ssentencepiece/python/ssentencepiece/resources/alphabet-30.vocab) | 
-| alphabet-32| `<blk>`,`<unk>`, `<sos>`, `<eos>`, `'`, `▁` and 26 alphabets (upper case) | [alphabet-32](ssentencepiece/python/ssentencepiece/resources/alphabet-32.vocab) | 
-| librispeech-500| 500 unigram pieces trained on Librispeech. (special tokens: `<blk>`,`<unk>` and `<sos/eos>`) | [librispeech-500](ssentencepiece/python/ssentencepiece/resources/librispeech-500.vocab) | 
-| librispeech-5000| 5000 unigram pieces trained on Librispeech. (special tokens: `<blk>`,`<unk>` and `<sos/eos>`) | [librispeech-5000](ssentencepiece/python/ssentencepiece/resources/librispeech-5000.vocab) | 
-| gigaspeech-500| 500 unigram pieces trained on Gigaspeech. (special tokens: `<blk>`,`<unk>` and `<sos/eos>`) | [gigaspeech-500](ssentencepiece/python/ssentencepiece/resources/gigaspeech-500.vocab) | 
-| gigaspeech-2000| 2000 unigram pieces trained on Gigaspeech. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>') | [gigaspeech-2000](ssentencepiece/python/ssentencepiece/resources/gigaspeech-2000.vocab) | 
-| gigaspeech-5000| 5000 unigram pieces trained on Gigaspeech. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>') | [gigaspeech-5000](ssentencepiece/python/ssentencepiece/resources/gigaspeech-5000.vocab) | 
-| zh-en-4258 | 3500 Chinese characters, 256 fallback bytes, 502 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>') | [zh-en-4258](ssentencepiece/python/ssentencepiece/resources/zh-en-4258.vocab) | 
-| zh-en-7258 | 6500 Chinese characters, 256 fallback bytes, 502 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>') | [zh-en-7258](ssentencepiece/python/ssentencepiece/resources/zh-en-7258.vocab) | 
-| zh-en-8756 | 6500 Chinese characters, 256 fallback bytes, 2000 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>') | [zh-en-8756](ssentencepiece/python/ssentencepiece/resources/zh-en-8756.vocab) | 
-| zh-en-8863 | 8105 Chinese characters, 256 fallback bytes, 502 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>') | [zh-en-8863](ssentencepiece/python/ssentencepiece/resources/zh-en-8863.vocab) | 
-| zh-en-13361 | 8105 Chinese characters, 256 fallback bytes, 5000 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>') | [zh-en-13361](ssentencepiece/python/ssentencepiece/resources/zh-en-13361.vocab) | 
-| zh-en-yue-11641 | 8105 + 1280 Chinese characters(Cantonese included), 256 fallback bytes, 2000 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>') | [zh-en-11641](ssentencepiece/python/ssentencepiece/resources/zh-en-11641.vocab) | 
-| zh-en-yue-14641 | 8105 + 1280 Chinese characters(Cantonese included), 256 fallback bytes, 5000 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>') | [zh-en-14641](ssentencepiece/python/ssentencepiece/resources/zh-en-14641.vocab) | 
+| alphabet-30| `<blk>`,`<unk>`, `'`, `▁` and 26 alphabets (upper case) | [alphabet-30](ssentencepiece/python/ssentencepiece/resources/alphabet-30.vocab) |
+| alphabet-32| `<blk>`,`<unk>`, `<sos>`, `<eos>`, `'`, `▁` and 26 alphabets (upper case) | [alphabet-32](ssentencepiece/python/ssentencepiece/resources/alphabet-32.vocab) |
+| librispeech-500| 500 unigram pieces trained on Librispeech. (special tokens: `<blk>`,`<unk>` and `<sos/eos>`) | [librispeech-500](ssentencepiece/python/ssentencepiece/resources/librispeech-500.vocab) |
+| librispeech-5000| 5000 unigram pieces trained on Librispeech. (special tokens: `<blk>`,`<unk>` and `<sos/eos>`) | [librispeech-5000](ssentencepiece/python/ssentencepiece/resources/librispeech-5000.vocab) |
+| gigaspeech-500| 500 unigram pieces trained on Gigaspeech. (special tokens: `<blk>`,`<unk>` and `<sos/eos>`) | [gigaspeech-500](ssentencepiece/python/ssentencepiece/resources/gigaspeech-500.vocab) |
+| gigaspeech-2000| 2000 unigram pieces trained on Gigaspeech. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`) | [gigaspeech-2000](ssentencepiece/python/ssentencepiece/resources/gigaspeech-2000.vocab) |
+| gigaspeech-5000| 5000 unigram pieces trained on Gigaspeech. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`) | [gigaspeech-5000](ssentencepiece/python/ssentencepiece/resources/gigaspeech-5000.vocab) |
+| zh-en-4258 | 3500 Chinese characters, 256 fallback bytes, 502 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`) | [zh-en-4258](ssentencepiece/python/ssentencepiece/resources/zh-en-4258.vocab) |
+| zh-en-7258 | 6500 Chinese characters, 256 fallback bytes, 502 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`) | [zh-en-7258](ssentencepiece/python/ssentencepiece/resources/zh-en-7258.vocab) |
+| zh-en-8756 | 6500 Chinese characters, 256 fallback bytes, 2000 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`) | [zh-en-8756](ssentencepiece/python/ssentencepiece/resources/zh-en-8756.vocab) |
+| zh-en-8863 | 8105 Chinese characters, 256 fallback bytes, 502 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`) | [zh-en-8863](ssentencepiece/python/ssentencepiece/resources/zh-en-8863.vocab) |
+| zh-en-13361 | 8105 Chinese characters, 256 fallback bytes, 5000 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`) | [zh-en-13361](ssentencepiece/python/ssentencepiece/resources/zh-en-13361.vocab) |
+| zh-en-yue-11641 | 8105 + 1280 Chinese characters(Cantonese included), 256 fallback bytes, 2000 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`) | [zh-en-yue-11641](ssentencepiece/python/ssentencepiece/resources/zh-en-yue-11641.vocab) |
+| zh-en-yue-14641 | 8105 + 1280 Chinese characters(Cantonese included), 256 fallback bytes, 5000 English unigram pieces. (special tokens: `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`) | [zh-en-yue-14641](ssentencepiece/python/ssentencepiece/resources/zh-en-yue-14641.vocab) |
 
 **Note**: The number of 3500, 6500 and 8105 is from [通用规范汉字表](http://www.moe.gov.cn/jyb_sjzl/ziliao/A19/201306/t20130601_186002.html).
 
