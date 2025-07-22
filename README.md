@@ -41,7 +41,7 @@ res = ssp.decode(ids)
 
 | Model Name | Description | Link |
 |------------|-------------|------|
-| alphabet-32| `<blk>`,`<unk>`, `<sos>`, `<eos>`, `'`, `▁` and 26 alphabets. | [alphabet-32](ssentencepiece/python/ssentencepiece/resources/alphabet-32.vocab) |
+| alphabet-33| `<blk>`,`<unk>`, `<sos>`, `<eos>`, `<pad>`, `'`, `▁` and 26 alphabets. | [alphabet-33](ssentencepiece/python/ssentencepiece/resources/alphabet-33.vocab) |
 | librispeech-500| 500 unigram pieces trained on Librispeech. | [librispeech-500](ssentencepiece/python/ssentencepiece/resources/librispeech-500.vocab) |
 | librispeech-5000| 5000 unigram pieces trained on Librispeech. | [librispeech-5000](ssentencepiece/python/ssentencepiece/resources/librispeech-5000.vocab) |
 | gigaspeech-500| 500 unigram pieces trained on Gigaspeech. | [gigaspeech-500](ssentencepiece/python/ssentencepiece/resources/gigaspeech-500.vocab) |
