@@ -158,7 +158,7 @@ void Ssentencepiece::Cut(const std::string &str,
         int32_t tmp = (unsigned char)(str[i]) + bytes_offset_;
         oids->push_back(tmp);
       } else {
-        if (oids->back() != unk_id_) {
+        if (oids->empty() || oids->back() != unk_id_) {
           oids->push_back(unk_id_);
         }
       }
@@ -247,7 +247,11 @@ std::string Ssentencepiece::Decode(const std::vector<int32_t> &ids) const {
       oss << token;
     }
   }
-  return oss.str().substr(1); // trim first space
+  std::string res = oss.str();
+  if (res.size() > 0 && res[0] == ' ') {
+    res = res.substr(1); // trim first space
+  }
+  return res;
 }
 
 std::vector<std::string>
