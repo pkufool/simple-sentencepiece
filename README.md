@@ -25,16 +25,35 @@ from ssentencepiece import Ssentencepiece
 ssp = Ssentencepiece("/path/to/bpe.vocab")
 
 # you can also use the default models provided by this package, see below for details
-# ssp = Ssentencepiece("gigaspeech-500")
+ssp = Ssentencepiece("gigaspeech-500")
+ssp = Ssentencepiece("zh-en-10381")
 
-# output ids
+# output ids (support both str and list of strs)
+# if it is list of strs, the strs are encoded in parallel
+ids = ssp.encode("HELLO WORLD")
 ids = ssp.encode(["HELLO WORLD", "LOVE AND PIECE"])
 
 # output string pieces
+# if it is list of strs, the strs are encoded in parallel
+pieces = ssp.encode("HELLO WORLD", out_type=str)
 pieces = ssp.encode(["HELLO WORLD", "LOVE AND PIECE"], out_type=str)
 
-# decode
-res = ssp.decode(ids)
+# decode (support list of ids or list of list of ids)
+# if it is list of list of ids, the ids are decoded in parallel
+res = ssp.decode([1,2,3,4,5])
+res = ssp.decode([[1,2,3,4], [4,5,6,7]])
+
+# get vocab size
+res = ssp.vocab_size()
+
+# piece to id (support both str of list of strs)
+id = ssp.piece_to_id("<sos>")
+ids = ssp.piece_to_id(["<sos>", "<blk>", "H", "L"])
+
+# id to piece (support both int of list of ints)
+piece = ssp.id_to_piece(5)
+pieces = ssp.id_to_piece([5, 10, 15])
+
 ```
 
 ## Default models
