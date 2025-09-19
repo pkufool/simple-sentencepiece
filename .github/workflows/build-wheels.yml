@@ -36,10 +36,6 @@ jobs:
         run: |
           ls -lh ./wheelhouse/
 
-      - uses: actions/upload-artifact@v4
-        with:
-          path: ./wheelhouse/*.whl
-
       - name: Publish wheels to PyPI
         env:
           TWINE_USERNAME: __token__

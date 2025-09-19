@@ -62,5 +62,6 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
+          pip install numpy
           cd build
           ctest --verbose
