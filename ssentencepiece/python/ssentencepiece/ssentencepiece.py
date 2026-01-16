@@ -46,7 +46,22 @@ class Ssentencepiece:
                 vocab = str(path)
             assert os.path.exists(vocab), f"Cannot find {vocab} file."
 
+        self.vocab = vocab
+        self.num_threads = num_threads
         self.processor = _ssentencepiece.ssentencepiece(vocab, num_threads)
+
+    def __getstate__(self):
+        # serialize only picklable parts
+        return {"vocab": self.vocab, "num_threads": self.num_threads}
+
+    def __setstate__(self, state):
+        # restore picklable parts
+        self.vocab = state["vocab"]
+        self.num_threads = state["num_threads"]
+        # lazily recreate non-picklable parts
+        self.processor = _ssentencepiece.ssentencepiece(
+            self.vocab, self.num_threads
+        )
 
     def encode(
         self, text: Union[str, List[str]], out_type=int
