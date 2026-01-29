@@ -74,6 +74,7 @@ pieces = ssp.id_to_piece([5, 10, 15])
 | zh-en-10381 | 8105 Chinese characters, 256 fallback bytes, 10 numbers, 10 punctuations, 2000 English unigram pieces. | [zh-en-10381](ssentencepiece/python/ssentencepiece/resources/zh-en-10381.vocab) |
 | zh-en-yue-9761 | 8105 + 1280 Chinese characters(Cantonese included), 256 fallback bytes, 10 numbers, 10 punctuations, 100 English unigram pieces. | [zh-en-yue-9761](ssentencepiece/python/ssentencepiece/resources/zh-en-yue-9761.vocab) |
 | zh-en-yue-11661 | 8105 + 1280 Chinese characters(Cantonese included), 256 fallback bytes, 10 numbers, 10 punctuations, 2000 English unigram pieces. | [zh-en-yue-11661](ssentencepiece/python/ssentencepiece/resources/zh-en-yue-11661.vocab) |
+| chn_jpn_yue_eng_ko_spectok.bpe | bpe tokens used in sensevoice ASR, support Chinese, Japanese, Cantonese, English, Korean | [chn_jpn_yue_eng_ko_spectok.bpe](ssentencepiece/python/ssentencepiece/resources/chn_jpn_yue_eng_ko_spectok.bpe.vocab) |
 
 **Note**: The number of 3500, 6500 and 8105 is from [通用规范汉字表](http://www.moe.gov.cn/jyb_sjzl/ziliao/A19/201306/t20130601_186002.html).
 
