@@ -140,7 +140,8 @@ TEST(Ssentencepiece, TestEncodeBbpe2) {
   std::string vocab_path = "ssentencepiece/python/tests/testdata/bbpe2.vocab";
   Ssentencepiece processor(vocab_path);
 
-  std::string str = "ƋţŅ ƌŋţ ƌĭĺ ƋŠŒ";
+  // Raw text; C++ auto-detects byte BPE and applies ByteEncode internally.
+  std::string str = "你 好 北 京";
   std::vector<std::string> pieces;
   processor.Encode(str, &pieces);
 
@@ -166,7 +167,7 @@ TEST(Ssentencepiece, TestDecodeBbpe2) {
 
   std::vector<int32_t> ids({105, 70, 252, 245, 221});
   std::string res = processor.Decode(ids);
-  EXPECT_EQ(res, "ƋţŅ ƌŋţ ƌĭĺ ƋŠŒ");
+  EXPECT_EQ(res, "你 好 北 京");
 }
 
 TEST(Ssentencepiece, TestIdPiece) {

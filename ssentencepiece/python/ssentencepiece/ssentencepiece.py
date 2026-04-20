@@ -126,7 +126,9 @@ class Ssentencepiece:
           If text is a list of strings and out_type is str, outputs a list of list of strings.
           If text is a list of strings and out_type is int, outputs a list of list of ints.
         """
-        if self.is_byte_bpe:
+        # Note: for byte BPE models using the C++ backend, byte_encode/byte_decode
+        # is handled internally on the C++ side, so no pre/post processing here.
+        if self.is_byte_bpe and self.use_sentencepiece:
             if isinstance(text, str):
                 text = byte_encode(text)
             else:
@@ -171,9 +173,11 @@ class Ssentencepiece:
             else:
                 result = self.sp.decode(ids)
         else:
+            # Note: for byte BPE models, the C++ Decode already applies
+            # smart_byte_decode internally, so no post processing needed here.
             result = self.processor.decode(ids)
 
-        if self.is_byte_bpe:
+        if self.is_byte_bpe and self.use_sentencepiece:
             if isinstance(result, str):
                 return smart_byte_decode(result)
             else:

@@ -17,6 +17,7 @@
  */
 
 #include "ssentencepiece/csrc/ssentencepiece.h"
+#include "ssentencepiece/csrc/byte_utils.h"
 #include <algorithm>
 #include <cassert>
 #include <cstring>
@@ -29,6 +30,13 @@
 #include <utility>
 
 namespace ssentencepiece {
+
+using byte_utils::ByteDecodeSlice;
+using byte_utils::CodepointToUtf8;
+using byte_utils::GetBcharToByte;
+using byte_utils::GetPrintableBchars;
+using byte_utils::kPrintableBaseChars;
+using byte_utils::Utf8ToCodepoints;
 
 void Ssentencepiece::Build(const std::string &vocab_path) {
   std::ifstream is(vocab_path);
@@ -172,7 +180,7 @@ void Ssentencepiece::Cut(const std::string &str,
 
 std::string Ssentencepiece::Encode(const std::string &str,
                                    std::vector<DagItem> *route) const {
-  std::istringstream iss(str);
+  std::istringstream iss(is_byte_bpe_ ? ByteEncode(str) : str);
   std::ostringstream oss;
   std::string word;
   while (iss >> word) {
@@ -251,6 +259,8 @@ std::string Ssentencepiece::Decode(const std::vector<int32_t> &ids) const {
   if (res.size() > 0 && res[0] == ' ') {
     res = res.substr(1); // trim first space
   }
+  if (is_byte_bpe_)
+    return SmartByteDecode(res);
   return res;
 }
 
@@ -292,6 +302,88 @@ void Ssentencepiece::LoadVocab(std::istream &is) {
     tokens_.push_back(token);
     scores_.push_back(score);
   }
+  is_byte_bpe_ = DetectByteBpe();
+}
+
+bool Ssentencepiece::DetectByteBpe() const {
+  if (tokens_.empty())
+    return false;
+  const auto &bchars = GetPrintableBchars();
+  for (const auto &token : tokens_) {
+    // Skip special tokens enclosed in angle brackets (<unk>, <blk>, <0xXX>…)
+    if (!token.empty() && token.front() == '<' && token.back() == '>')
+      continue;
+    auto cps = Utf8ToCodepoints(token);
+    // Strip leading ▁ (U+2581)
+    size_t start = 0;
+    while (start < cps.size() && cps[start] == 0x2581)
+      ++start;
+    if (start == cps.size())
+      continue; // token is only ▁
+    for (size_t k = start; k < cps.size(); ++k) {
+      if (bchars.find(cps[k]) == bchars.end())
+        return false;
+    }
+  }
+  return true;
+}
+
+std::string Ssentencepiece::ByteEncode(const std::string &input) const {
+  // Normalize whitespace at codepoint level, then map each UTF-8 byte to its
+  // printable base char (identical to byte_encode() in byte_utils.py).
+  auto cps = Utf8ToCodepoints(input);
+  std::string normalized;
+  bool prev_ws = false;
+  for (uint32_t cp : cps) {
+    bool is_ws = (cp == 0x20 || cp == 0x09 || cp == 0x0A || cp == 0x0B ||
+                  cp == 0x0C || cp == 0x0D);
+    if (is_ws) {
+      if (!prev_ws)
+        normalized += ' ';
+      prev_ws = true;
+    } else {
+      normalized += CodepointToUtf8(cp);
+      prev_ws = false;
+    }
+  }
+  std::string result;
+  result.reserve(normalized.size() * 2);
+  for (unsigned char b : normalized)
+    result += CodepointToUtf8(kPrintableBaseChars[b]);
+  return result;
+}
+
+std::string Ssentencepiece::SmartByteDecode(const std::string &input) const {
+  // Convert each printable-base-char back to its raw byte, then decode UTF-8.
+  // On failure, use DP to recover the maximum number of valid Unicode chars
+  // (same semantics as smart_byte_decode() in byte_utils.py).
+  auto cps = Utf8ToCodepoints(input);
+  int n = (int)cps.size();
+
+  std::string simple = ByteDecodeSlice(cps, 0, n);
+  if (!simple.empty() || n == 0)
+    return simple;
+
+  // DP: f[i] = max valid chars decoded from cps[0..i), pt[i] = predecessor
+  std::vector<int> f(n + 1, 0), pt(n + 1, 0);
+  for (int i = 1; i <= n; ++i) {
+    f[i] = f[i - 1];
+    pt[i] = i - 1;
+    for (int j = 1; j <= std::min(4, i); ++j) {
+      if (!ByteDecodeSlice(cps, i - j, i).empty() && f[i - j] + 1 > f[i]) {
+        f[i] = f[i - j] + 1;
+        pt[i] = i - j;
+      }
+    }
+  }
+  std::string result;
+  int cur = n;
+  while (cur > 0) {
+    if (f[cur] == f[pt[cur]] + 1)
+      result = ByteDecodeSlice(cps, pt[cur], cur) + result;
+    cur = pt[cur];
+  }
+  return result;
 }
 
 int32_t Ssentencepiece::PieceToId(const std::string &piece) const {

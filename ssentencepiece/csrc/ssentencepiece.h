@@ -96,7 +96,12 @@ private:
   void Cut(const std::string &str, const std::vector<DagItem> &route,
            std::vector<int32_t> *oids) const;
 
+  bool DetectByteBpe() const;
+  std::string ByteEncode(const std::string &str) const;
+  std::string SmartByteDecode(const std::string &str) const;
+
   bool fallback_bytes_ = false;
+  bool is_byte_bpe_ = false;
   int32_t bytes_offset_ = 0;
   int32_t unk_id_ = 0;
   std::vector<std::string> tokens_;
