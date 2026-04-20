@@ -24,11 +24,10 @@ from ssentencepiece import Ssentencepiece
 
 try:
     import sentencepiece as spm
+
+    has_sentencepiece = True
 except ImportError:
-    print("Please run")
-    print("  pip install sentencepiece")
-    print("before you continue")
-    raise
+    has_sentencepiece = False
 
 
 @click.group()
@@ -51,6 +50,10 @@ def export(bpe_model):
     Export the vocabulary (needed by simple-sentencepiece) from a BPE model (trained with google's sentencepiece).
     The vocabulary is written to a file with the same name as the model but with a .vocab extension.
     """
+    if not has_sentencepiece:
+        raise click.ClickException(
+            "sentencepiece is required for export. Run: pip install sentencepiece"
+        )
     model_file = bpe_model
     vocab_file = model_file.replace(".model", ".vocab")
 
@@ -126,6 +129,10 @@ def train_bpe_model(
 
     model_file = Path(model_prefix + ".vocab")
     if not model_file.is_file():
+        if not has_sentencepiece:
+            raise click.ClickException(
+                "sentencepiece is required for train. Run: pip install sentencepiece"
+            )
         spm.SentencePieceTrainer.train(
             input=texts,
             vocab_size=vocab_size,
@@ -145,19 +152,10 @@ def train_bpe_model(
 
 @cli.command(name="encode")
 @click.option(
-    "--bpe-model",
+    "--model",
     type=str,
-    help="""
-    The path to the bpe model, if provided will use standard sentencepiece
-    toolkit (from google) to encode the text.
-    """,
-)
-@click.option(
-    "--bpe-vocab",
-    type=str,
-    help="""The path to the bpe model, if provided will use simple-sentencepiece
-    (current one) to encode the text. If provided it will override the bpe-model.
-    """,
+    required=True,
+    help="The path to the bpe model or vocab file.",
 )
 @click.option(
     "--texts",
@@ -175,16 +173,11 @@ def train_bpe_model(
     type=str,
     help="The path to the output file. If not provided, will write to stdout.",
 )
-def encode_texts(bpe_model, bpe_vocab, texts, output_format, output):
+def encode_texts(model, texts, output_format, output):
     """
     Encode the texts to tokens or token ids.
     """
-    if bpe_vocab:
-        sp = Ssentencepiece(bpe_vocab)
-    else:
-        assert bpe_model, "Either bpe-model or bpe-vocab should be provided"
-        sp = spm.SentencePieceProcessor()
-        sp.Load(bpe_model)
+    sp = Ssentencepiece(model)
     if output:
         output = open(output, "w")
     else:
@@ -207,19 +200,10 @@ def encode_texts(bpe_model, bpe_vocab, texts, output_format, output):
 
 @cli.command(name="decode")
 @click.option(
-    "--bpe-model",
+    "--model",
     type=str,
-    help="""
-    The path to the bpe model, if provided will use standard sentencepiece
-    toolkit (from google) to encode the text.
-    """,
-)
-@click.option(
-    "--bpe-vocab",
-    type=str,
-    help="""The path to the bpe model, if provided will use simple-sentencepiece
-    (current one) to encode the text. If provided it will override the bpe-model.
-    """,
+    required=True,
+    help="The path to the bpe model or vocab file.",
 )
 @click.option(
     "--input",
@@ -237,17 +221,12 @@ def encode_texts(bpe_model, bpe_vocab, texts, output_format, output):
     type=str,
     help="The path to the output file. If not provided, will write to stdout.",
 )
-def decode_pieces(bpe_model, bpe_vocab, input, input_format, output):
+def decode_pieces(model, input, input_format, output):
     """
     Decode the tokens or token ids to texts.
     tokens and token ids are separated by space.
     """
-    if bpe_vocab:
-        sp = Ssentencepiece(bpe_vocab)
-    else:
-        assert bpe_model, "Either bpe-model or bpe-vocab should be provided"
-        sp = spm.SentencePieceProcessor()
-        sp.Load(bpe_model)
+    sp = Ssentencepiece(model)
     if output:
         output = open(output, "w")
     else:
@@ -260,7 +239,7 @@ def decode_pieces(bpe_model, bpe_vocab, input, input_format, output):
                 if input_format == "piece":
                     r = "".join(sen).replace("▁", " ").strip()
                 else:
-                    r = sp.decode([in_type(s) for s in sen])
+                    r = sp.decode([int(s) for s in sen])
                 output.write(r + "\n")
     else:
         for sen in sys.stdin:
@@ -268,7 +247,7 @@ def decode_pieces(bpe_model, bpe_vocab, input, input_format, output):
             if input_format == "piece":
                 r = "".join(sen).replace("▁", " ").strip()
             else:
-                r = sp.decode([in_type(s) for s in sen])
+                r = sp.decode([int(s) for s in sen])
             output.write(r + "\n")
 
 
