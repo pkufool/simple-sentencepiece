@@ -18,9 +18,11 @@
 import click
 import logging
 import sys
+import tempfile
 
 from pathlib import Path
 from ssentencepiece import Ssentencepiece
+from ssentencepiece.byte_utils import byte_encode
 
 try:
     import sentencepiece as spm
@@ -104,6 +106,12 @@ def export(bpe_model):
     default=100000000,
     help="The number of sentences to use for training.",
 )
+@click.option(
+    "--byte-bpe",
+    is_flag=True,
+    default=False,
+    help="Enable byte-level BPE for CJK and other multi-byte text.",
+)
 def train_bpe_model(
     output_dir,
     texts,
@@ -111,6 +119,7 @@ def train_bpe_model(
     character_coverage,
     model_type,
     input_sentence_size,
+    byte_bpe,
 ):
     """
     Use the sentencepiece library to train a BPE model.
@@ -133,8 +142,18 @@ def train_bpe_model(
             raise click.ClickException(
                 "sentencepiece is required for train. Run: pip install sentencepiece"
             )
+        train_input = texts
+        if byte_bpe:
+            byte_encoded_file = tempfile.NamedTemporaryFile(
+                mode="w", suffix=".txt", delete=False
+            )
+            with open(texts, "r") as f:
+                for line in f:
+                    byte_encoded_file.write(byte_encode(line.strip()) + "\n")
+            byte_encoded_file.close()
+            train_input = byte_encoded_file.name
         spm.SentencePieceTrainer.train(
-            input=texts,
+            input=train_input,
             vocab_size=vocab_size,
             model_type=model_type,
             model_prefix=model_prefix,
@@ -145,6 +164,10 @@ def train_bpe_model(
             bos_id=-1,
             eos_id=-1,
         )
+        if byte_bpe:
+            import os
+
+            os.unlink(byte_encoded_file.name)
     else:
         print(f"{model_file} exists - skipping")
         return

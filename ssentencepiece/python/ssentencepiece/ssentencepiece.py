@@ -20,6 +20,9 @@ import unicodedata
 from typing import List, Union
 
 import importlib_resources
+from ssentencepiece.byte_utils import byte_encode, smart_byte_decode, PRINTABLE_BASE_CHARS
+
+PRINTABLE_BCHARS = set(chr(c) for c in PRINTABLE_BASE_CHARS)
 
 
 class Ssentencepiece:
@@ -62,17 +65,38 @@ class Ssentencepiece:
             self.sp = spm.SentencePieceProcessor()
             self.sp.Load(model)
 
+        self.is_byte_bpe = self._detect_byte_bpe()
+
+    def _detect_byte_bpe(self) -> bool:
+        try:
+            size = self.vocab_size()
+            for i in range(size):
+                piece = self.id_to_piece(i)
+                if piece.startswith("<") and piece.endswith(">"):
+                    continue
+                # sentencepiece uses ▁ as space marker
+                stripped = piece.lstrip("▁")
+                if not stripped:
+                    continue
+                if not all(c in PRINTABLE_BCHARS for c in stripped):
+                    return False
+            return size > 0
+        except Exception:
+            return False
+
     def __getstate__(self):
         return {
             "model": self.model,
             "num_threads": self.num_threads,
             "use_sentencepiece": self.use_sentencepiece,
+            "is_byte_bpe": self.is_byte_bpe,
         }
 
     def __setstate__(self, state):
         self.model = state["model"]
         self.num_threads = state["num_threads"]
         self.use_sentencepiece = state["use_sentencepiece"]
+        self.is_byte_bpe = state.get("is_byte_bpe", False)
         if self.use_sentencepiece:
             import sentencepiece as spm
 
@@ -102,6 +126,12 @@ class Ssentencepiece:
           If text is a list of strings and out_type is str, outputs a list of list of strings.
           If text is a list of strings and out_type is int, outputs a list of list of ints.
         """
+        if self.is_byte_bpe:
+            if isinstance(text, str):
+                text = byte_encode(text)
+            else:
+                text = [byte_encode(t) for t in text]
+
         if self.use_sentencepiece:
             if isinstance(text, str):
                 return self.sp.encode(text, out_type=out_type)
@@ -137,11 +167,18 @@ class Ssentencepiece:
         """
         if self.use_sentencepiece:
             if isinstance(ids[0], list):
-                return [self.sp.decode(x) for x in ids]
+                result = [self.sp.decode(x) for x in ids]
             else:
-                return self.sp.decode(ids)
+                result = self.sp.decode(ids)
+        else:
+            result = self.processor.decode(ids)
 
-        return self.processor.decode(ids)
+        if self.is_byte_bpe:
+            if isinstance(result, str):
+                return smart_byte_decode(result)
+            else:
+                return [smart_byte_decode(r) for r in result]
+        return result
 
     def vocab_size(self) -> int:
         """
