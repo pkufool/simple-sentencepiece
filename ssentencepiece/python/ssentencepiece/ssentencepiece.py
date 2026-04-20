@@ -24,44 +24,64 @@ import importlib_resources
 
 class Ssentencepiece:
     def __init__(
-        self, vocab: str = "librispeech-500", num_threads: int = os.cpu_count()
+        self, model: str = "librispeech-500", num_threads: int = os.cpu_count()
     ):
         """
         Construct a Ssentencepiece object.
 
         Args:
-          vocab:
-            The path of vocab file (this vocab file must be created by google's
-            sentencepiece trainer.
+          model:
+            The path of vocab file or sentencepiece model file.
           num_threads:
             The number of worker threads when encode/decode multiple sequences.
             Default `os.cpu_count()`.
         """
-        if not os.path.exists(vocab):
+        self.model = model
+        self.num_threads = num_threads
+        self.use_sentencepiece = False
+
+        resolved_model = model
+        if not os.path.exists(resolved_model):
             ref = (
                 importlib_resources.files("ssentencepiece")
-                / f"resources/{vocab}.vocab"
+                / f"resources/{resolved_model}.vocab"
             )
             with importlib_resources.as_file(ref) as path:
-                vocab = str(path)
-            assert os.path.exists(vocab), f"Cannot find {vocab} file."
+                resolved_model = str(path)
+            if not os.path.exists(resolved_model):
+                resolved_model = model
 
-        self.vocab = vocab
-        self.num_threads = num_threads
-        self.processor = _ssentencepiece.ssentencepiece(vocab, num_threads)
+        try:
+            self.processor = _ssentencepiece.ssentencepiece(
+                resolved_model, num_threads
+            )
+        except Exception:
+            import sentencepiece as spm
+
+            self.use_sentencepiece = True
+            self.sp = spm.SentencePieceProcessor()
+            self.sp.Load(model)
 
     def __getstate__(self):
-        # serialize only picklable parts
-        return {"vocab": self.vocab, "num_threads": self.num_threads}
+        return {
+            "model": self.model,
+            "num_threads": self.num_threads,
+            "use_sentencepiece": self.use_sentencepiece,
+        }
 
     def __setstate__(self, state):
-        # restore picklable parts
-        self.vocab = state["vocab"]
+        self.model = state["model"]
         self.num_threads = state["num_threads"]
-        # lazily recreate non-picklable parts
-        self.processor = _ssentencepiece.ssentencepiece(
-            self.vocab, self.num_threads
-        )
+        self.use_sentencepiece = state["use_sentencepiece"]
+        if self.use_sentencepiece:
+            import sentencepiece as spm
+
+            self.sp = spm.SentencePieceProcessor()
+            self.sp.Load(self.model)
+        else:
+            self.processor = _ssentencepiece.ssentencepiece(
+                self.model, self.num_threads
+            )
 
     def encode(
         self, text: Union[str, List[str]], out_type=int
@@ -82,6 +102,12 @@ class Ssentencepiece:
           If text is a list of strings and out_type is str, outputs a list of list of strings.
           If text is a list of strings and out_type is int, outputs a list of list of ints.
         """
+        if self.use_sentencepiece:
+            if isinstance(text, str):
+                return self.sp.encode(text, out_type=out_type)
+            else:
+                return [self.sp.encode(t, out_type=out_type) for t in text]
+
         if out_type is int:
             return self.processor.encode(text, output_id=True)
         else:
@@ -109,13 +135,25 @@ class Ssentencepiece:
           If the ids is a list of ints, outputs a single string.
           If the ids is a list of a list of ints, outputs a list of strings.
         """
+        if self.use_sentencepiece:
+            if isinstance(ids[0], list):
+                return [self.sp.decode(x) for x in ids]
+            else:
+                return self.sp.decode(ids)
+
         return self.processor.decode(ids)
 
     def vocab_size(self) -> int:
         """
         Return the vocabulary size.`
         """
+        if self.use_sentencepiece:
+            return self.sp.get_piece_size()
+
         return self.processor.vocab_size()
+
+    def get_piece_size(self) -> int:
+        return self.vocab_size()
 
     def id_to_piece(self, ids: Union[int, List[int]]) -> Union[str, List[str]]:
         """
@@ -129,6 +167,12 @@ class Ssentencepiece:
           If the ids is a a int, outputs a single string.
           If the ids is a list of ints, outputs a list of strings.
         """
+        if self.use_sentencepiece:
+            if isinstance(ids, int):
+                return self.sp.id_to_piece(ids)
+            else:
+                return [self.sp.id_to_piece(i) for i in ids]
+
         return self.processor.id_to_piece(ids)
 
     def piece_to_id(
@@ -145,6 +189,11 @@ class Ssentencepiece:
           If the ids is a string, outputs a single int.
           If the ids is a list of string, outputs a list of ints.
         """
+        if self.use_sentencepiece:
+            if isinstance(pieces, str):
+                return self.sp.piece_to_id(pieces)
+            else:
+                return [self.sp.piece_to_id(p) for p in pieces]
 
         # google's sentencepiece uses NFKC normalization.
         if isinstance(pieces, str):
