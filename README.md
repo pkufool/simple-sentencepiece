@@ -78,3 +78,16 @@ pieces = ssp.id_to_piece([5, 10, 15])
 
 **Note**: The number of 3500, 6500 and 8105 is from [通用规范汉字表](http://www.moe.gov.cn/jyb_sjzl/ziliao/A19/201306/t20130601_186002.html).
 
+
+
+## C++ Integration
+
+The C++ core has **no protobuf dependency** — only a C++14 compiler and
+pthread are required. This makes it easy to embed simple-sentencepiece in any
+existing C++ system without conflicting with other protobuf versions.
+
+A complete integration demo with CMake build scripts is provided in
+[example/](example/).
+
+- English guide: [example/README.md](example/README.md)
+- 中文指南: [example/README_zh.md](example/README_zh.md)
