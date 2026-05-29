@@ -39,24 +39,20 @@ class Ssentencepiece:
             The number of worker threads when encode/decode multiple sequences.
             Default `os.cpu_count()`.
         """
-        self.model = model
         self.num_threads = num_threads
         self.use_sentencepiece = False
 
-        resolved_model = model
-        if not os.path.exists(resolved_model):
+        # if not exists, it should be a resource file, we try to resolve it from the package resources.
+        if not os.path.exists(model):
             ref = (
                 importlib_resources.files("ssentencepiece")
-                / f"resources/{resolved_model}.vocab"
+                / f"resources/{model}.vocab"
             )
             with importlib_resources.as_file(ref) as path:
-                resolved_model = str(path)
-            if not os.path.exists(resolved_model):
-                resolved_model = model
-
+                model = str(path)
         try:
             self.processor = _ssentencepiece.ssentencepiece(
-                resolved_model, num_threads
+                model, num_threads
             )
         except Exception:
             import sentencepiece as spm
@@ -64,7 +60,7 @@ class Ssentencepiece:
             self.use_sentencepiece = True
             self.sp = spm.SentencePieceProcessor()
             self.sp.Load(model)
-
+        self.model = model
         self.is_byte_bpe = self._detect_byte_bpe()
 
     def _detect_byte_bpe(self) -> bool:
