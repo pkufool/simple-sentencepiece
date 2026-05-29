@@ -62,7 +62,7 @@ jobs:
       - name: Install requirements
         shell: bash
         run: |
-          python3 -m pip install numpy importlib-resources
+          python3 -m pip install numpy importlib-resources sentencepiece
 
       - name: Run tests
         shell: bash
