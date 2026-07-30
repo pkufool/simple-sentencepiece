@@ -45,28 +45,60 @@ def cli():
 
 @cli.command(name="export")
 @click.option(
-    "--bpe-model", type=str, required=True, help="The path to the bpe model."
+    "--model",
+    type=str,
+    required=True,
+    help="The path to the bpe model (.model) or vocab file (.vocab).",
 )
-def export(bpe_model):
+def export(model):
     """
-    Export the vocabulary (needed by simple-sentencepiece) from a BPE model (trained with google's sentencepiece).
-    The vocabulary is written to a file with the same name as the model but with a .vocab extension.
-    """
-    if not has_sentencepiece:
-        raise click.ClickException(
-            "sentencepiece is required for export. Run: pip install sentencepiece"
-        )
-    model_file = bpe_model
-    vocab_file = model_file.replace(".model", ".vocab")
+    Export vocabulary and/or tokens from a BPE model or vocab file.
 
-    sp = spm.SentencePieceProcessor()
-    sp.Load(model_file)
-    vocabs = [sp.IdToPiece(id) for id in range(sp.GetPieceSize())]
-    with open(vocab_file, "w") as vfile:
-        for v in vocabs:
-            id = sp.PieceToId(v)
-            vfile.write(f"{v}\t{sp.GetScore(id)}\n")
-    logging.info(f"Vocabulary file is written to {vocab_file}")
+    For BPE models (trained with google's sentencepiece):
+      - The vocabulary (.vocab) is exported (piece\\tscore format).
+      - A .tokens file is also exported (piece\\tid format).
+
+    For vocab files (already in simple-sentencepiece format):
+      - Only the .tokens file is exported (piece\\tid format), since the
+        vocab file already exists.
+    """
+    is_bpe_model = model.endswith(".model")
+
+    if is_bpe_model:
+        if not has_sentencepiece:
+            raise click.ClickException(
+                "sentencepiece is required to export from a BPE model. "
+                "Run: pip install sentencepiece"
+            )
+        vocab_file = model.replace(".model", ".vocab")
+        tokens_file = model.replace(".model", ".tokens")
+
+        sp = spm.SentencePieceProcessor()
+        sp.Load(model)
+
+        # Export vocab (piece\tscore)
+        vocabs = [sp.IdToPiece(i) for i in range(sp.GetPieceSize())]
+        with open(vocab_file, "w") as vfile:
+            for v in vocabs:
+                id = sp.PieceToId(v)
+                vfile.write(f"{v}\t{sp.GetScore(id)}\n")
+        logging.info(f"Vocabulary file is written to {vocab_file}")
+
+        # Export tokens (piece\tid)
+        with open(tokens_file, "w") as tfile:
+            for i in range(sp.GetPieceSize()):
+                piece = sp.IdToPiece(i)
+                tfile.write(f"{piece}\t{i}\n")
+        logging.info(f"Tokens file is written to {tokens_file}")
+    else:
+        # Input is a vocab file, only export tokens
+        tokens_file = model.replace(".vocab", ".tokens")
+        sp = Ssentencepiece(model)
+        with open(tokens_file, "w") as tfile:
+            for i in range(sp.vocab_size()):
+                piece = sp.id_to_piece(i)
+                tfile.write(f"{piece}\t{i}\n")
+        logging.info(f"Tokens file is written to {tokens_file}")
 
 
 @cli.command(name="train")
@@ -112,6 +144,14 @@ def export(bpe_model):
     default=False,
     help="Enable byte-level BPE for CJK and other multi-byte text.",
 )
+@click.option(
+    "--user-defined-symbols",
+    type=str,
+    default=None,
+    help="Comma-separated list of additional user-defined symbols to add to the vocabulary. "
+    "These are appended after the reserved symbols (<blk>, <sos>, <eos>, <pad>). "
+    "Example: '<sep>,<cls>,<mask>'",
+)
 def train_bpe_model(
     output_dir,
     texts,
@@ -120,21 +160,38 @@ def train_bpe_model(
     model_type,
     input_sentence_size,
     byte_bpe,
+    user_defined_symbols,
 ):
     """
     Use the sentencepiece library to train a BPE model.
-    The first 5 tokens are fixed to <blk>, <sos>, <eos>, <pad> and <unk>.
+    The first 4 tokens are fixed to <blk>, <sos>, <eos>, <pad>.
+
+    The reserved symbols (<blk>, <sos>, <eos>, <pad>) are always included
+    and appear first. Additional user-defined symbols can be specified via
+    --user-defined-symbols and are appended after the reserved ones.
     """
     model_prefix = f"{output_dir}/{model_type}_{vocab_size}"
 
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    user_defined_symbols = ["<blk>", "<sos>", "<eos>", "<pad>"]
-    unk_id = len(user_defined_symbols)
-    # Note: unk_id is fixed to 4.
-    # If you change it, you should also change other
-    # places that are using it.
+    # Reserved symbols are always first in the vocabulary.
+    # These are required by the downstream framework (e.g., k2/icefall)
+    # and must not be reordered or removed.
+    reserved_symbols = ["<blk>", "<sos>", "<eos>", "<pad>"]
+
+    # Append any user-provided symbols after the reserved ones.
+    all_user_defined_symbols = list(reserved_symbols)
+    if user_defined_symbols:
+        extra_symbols = [
+            s.strip() for s in user_defined_symbols.split(",") if s.strip()
+        ]
+        all_user_defined_symbols.extend(extra_symbols)
+
+    # unk_id is placed right after all user-defined symbols.
+    # Without extra symbols, unk_id = 4 (i.e. len(reserved_symbols)).
+    # With --user-defined-symbols, unk_id shifts accordingly.
+    unk_id = len(all_user_defined_symbols)
 
     model_file = Path(model_prefix + ".vocab")
     if not model_file.is_file():
@@ -159,7 +216,7 @@ def train_bpe_model(
             model_prefix=model_prefix,
             input_sentence_size=input_sentence_size,
             character_coverage=character_coverage,
-            user_defined_symbols=user_defined_symbols,
+            user_defined_symbols=all_user_defined_symbols,
             unk_id=unk_id,
             bos_id=-1,
             eos_id=-1,
@@ -168,6 +225,16 @@ def train_bpe_model(
             import os
 
             os.unlink(byte_encoded_file.name)
+
+        # Export vocab in simple-sentencepiece format (piece\tscore)
+        sp = spm.SentencePieceProcessor()
+        sp.Load(model_prefix + ".model")
+        vocab_file = model_prefix + ".vocab"
+        with open(vocab_file, "w") as vfile:
+            for i in range(sp.GetPieceSize()):
+                piece = sp.IdToPiece(i)
+                vfile.write(f"{piece}\t{sp.GetScore(i)}\n")
+        logging.info(f"Vocabulary file is written to {vocab_file}")
     else:
         print(f"{model_file} exists - skipping")
         return
